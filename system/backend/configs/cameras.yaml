@@ -1,0 +1,18 @@
+cameras:
+  - camera_id: "CAM_FILE_001"
+    name: "Demo file camera"
+    rtsp_url: "C:/Users/ADMIN/Downloads/main_dataset/finetune_data/videos/val/Accident/000096.mp4"
+    location: "Video file"
+    enabled: True
+
+  - camera_id: "CAM_FILE_002"
+    name: "Demo file camera 2"
+    rtsp_url: "C:/Users/ADMIN/Downloads/main_dataset/finetune_data/videos/val/Accident/000222.mp4"
+    location: "Video file"
+    enabled: True
+
+  - camera_id: "CAM_FILE_003"
+    name: "Demo file camera 3"
+    rtsp_url: "C:/Users/ADMIN/Downloads/main_dataset/finetune_data/videos/val/Normal/AIcity21_track4_96_part2.mp4"
+    location: "Video file"
+    enabled: True

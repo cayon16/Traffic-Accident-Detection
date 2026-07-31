@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Local data and model artifacts
+data/**/*
+!data/README.md
+models/**/*
+!models/README.md
+
+# Generated outputs
+output/**/*
+!output/README.md
+wandb/
+
+# Runtime backend files
+system/backend/storage/
+system/backend/tmp_*/
+system/backend/*.db
+
+# Large media artifacts
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm

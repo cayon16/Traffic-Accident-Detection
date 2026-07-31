@@ -1,0 +1,66 @@
+system:
+  log_level: "INFO"
+
+stream:
+  buffer_seconds: 65
+  segment_seconds: 60
+  segment_interval_seconds: 50
+  frame_stride: 16
+  inference_interval_seconds: 50
+  inference_fps: 1.875
+  reconnect_interval_seconds: 3
+  realtime_playback: true
+  loop_file_sources: true
+
+model:
+  backend: "pth"        # pth, onnx, or mock
+  pth_model_path: "C:/Users/ADMIN/Desktop/python_code/python/thesis/main_model/VadCLIP-main/output/model_current.pth"
+  pth_device: "auto"    # auto, cuda, or cpu
+  clip_download_root: "C:/Users/ADMIN/Desktop/python_code/python/thesis/main_model/VadCLIP-main/output"
+  onnx_provider: "auto" # auto, cuda, or cpu
+  clip_onnx_path: "../../models/clip_vit_b16_image.onnx"
+  vad_onnx_path: "../../models/vadclip_2class.onnx"
+  score_source: "a2" # fusion, a1, or a2
+  inference_mode: 2
+  spatial_top_k: 3
+  visual_length: 256
+  classes_num: 2
+  clip_batch_size: 64
+
+processing:
+  segment_worker_count: 1
+
+security:
+  # Empty means upload API is open. Set a long random value in production and send it via X-API-Key.
+  segment_upload_api_key: ""
+
+decision:
+  threshold_warning: 0.4
+  threshold_accident: 0.5
+  min_consecutive_hits: 1
+  smoothing_window: 1
+  cooldown_seconds: 10
+
+clip:
+  boundary_threshold: 0.5
+  boundary_buffer_seconds: 3
+  boundary_max_gap_seconds: 2
+  pre_event_seconds: 3
+  post_event_seconds: 3
+  output_fps: 25
+
+storage:
+  evidence_dir: "storage/evidence"
+  thumbnails_dir: "storage/thumbnails"
+  uploaded_segments_dir: "storage/segments"
+  keep_non_accident_segments: false
+
+retention:
+  enabled: false
+  normal_segment_hours: 24
+  normal_segment_days: 7
+  accident_segment_days: 30
+  evidence_days: 365
+
+database:
+  url: "sqlite:///accident_system.db"

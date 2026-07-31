@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Traffic Accident Monitor</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-2: #f9fafb;
+      --text: #17212f;
+      --muted: #667085;
+      --border: #d8dee8;
+      --accent: #2457a6;
+      --accent-soft: #e7eefb;
+      --danger: #b42318;
+      --danger-soft: #fee4e2;
+      --ok: #087443;
+      --ok-soft: #dcfae6;
+      --warn: #b54708;
+      --warn-soft: #fef0c7;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    button:hover { border-color: #9aa7bb; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    button.ghost { background: transparent; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      min-height: 36px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .top-actions,
+    .inline-actions,
+    .tabs,
+    .filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .sidebar,
+    .workspace {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .panel-title {
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .panel-body {
+      padding: 12px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .kpi {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      min-height: 84px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .kpi-sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .camera-list,
+    .compact-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .camera-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .row-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 22px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #8bdfad; }
+    .badge.warn { color: var(--warn); background: var(--warn-soft); border-color: #f7c96b; }
+    .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #f5a19a; }
+    .badge.accent { color: var(--accent); background: var(--accent-soft); border-color: #aac0e7; }
+
+    .tabs {
+      padding: 8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .tab {
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .filters {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-2);
+    }
+
+    .filter-field {
+      min-width: 160px;
+      max-width: 240px;
+      flex: 1;
+    }
+
+    .filter-field.small { max-width: 160px; }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: #fff;
+    }
+
+    tr:hover td {
+      background: #fbfcfe;
+    }
+
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    .storage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .storage-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .storage-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .notice {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .event-dialog {
+      width: min(1100px, calc(100vw - 28px));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0;
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .dialog-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+      gap: 12px;
+      padding: 12px;
+    }
+
+    video {
+      width: 100%;
+      max-height: 460px;
+      background: #000;
+      border-radius: 8px;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .score-box {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .score-box span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .score-box strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .score-box small {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .details {
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 8px;
+      font-size: 13px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dialog-grid { grid-template-columns: 1fr; }
+      .score-panel { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      header { align-items: flex-start; flex-direction: column; }
+      .kpis,
+      .storage-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .filter-field,
+      .filter-field.small {
+        max-width: none;
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Traffic Accident Monitor</h1>
+      <div class="muted" id="lastRefresh">Waiting for data</div>
+    </div>
+    <div class="top-actions">
+      <span id="wsState" class="badge warn">connecting</span>
+      <button onclick="setTab('upload')">Upload Segment</button>
+      <button class="primary" onclick="refreshAll()">Refresh</button>
+    </div>
+  </header>
+
+  <main class="app">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Cameras</div>
+          <span id="cameraCount" class="badge">0</span>
+        </div>
+        <div class="panel-body">
+          <div id="cameraList" class="camera-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Operational Queue</div>
+        </div>
+        <div class="panel-body compact-list">
+          <div class="notice" id="queueSummary">No segment data loaded.</div>
+          <button onclick="setTab('segments')">View Segments</button>
+          <button onclick="setTab('storage')">Open Storage</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Online Cameras</div>
+          <div class="kpi-value" id="kpiOnline">0</div>
+          <div class="kpi-sub" id="kpiCameraSub">0 total</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Pending Events</div>
+          <div class="kpi-value" id="kpiPending">0</div>
+          <div class="kpi-sub">Awaiting review</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Latest Score</div>
+          <div class="kpi-value" id="kpiLatestScore">0.000</div>
+          <div class="kpi-sub" id="kpiLatestCamera">No event</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Segment Queue</div>
+          <div class="kpi-value" id="kpiQueue">0</div>
+          <div class="kpi-sub">Queued or processing</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Evidence Storage</div>
+          <div class="kpi-value" id="kpiEvidence">0 B</div>
+          <div class="kpi-sub" id="kpiEvidenceSub">0 files</div>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Views">
+        <button id="tab-events" class="tab active" onclick="setTab('events')">Events</button>
+        <button id="tab-segments" class="tab" onclick="setTab('segments')">Segments</button>
+        <button id="tab-storage" class="tab" onclick="setTab('storage')">Storage</button>
+        <button id="tab-upload" class="tab" onclick="setTab('upload')">Upload</button>
+      </nav>
+
+      <section id="view-events" class="panel tab-view active">
+        <div class="panel-head">
+          <div class="panel-title">Event Review</div>
+          <div class="inline-actions">
+            <button onclick="clearEventFilters()">Clear Filters</button>
+          </div>
+        </div>
+        <div class="filters">
+          <div class="filter-field">
+            <select id="eventCameraFilter" onchange="renderEvents()"></select>
+          </div>
+          <div class="filter-field small">
+            <select id="eventStatusFilter" onchange="renderEvents()">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="false_alarm">False alarm</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <input id="eventSearch" placeholder="Search event or camera" oninput="renderEvents()" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Camera</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Evidence</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="eventRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-segments" class="panel tab-view">
+        <div class="panel-head">
+          <div class="panel-title">Segment Processing</div>
+          <button onclick="refreshSegments()">Refresh Segments</button>
+        </div>
+        <div class="filters">
+          <div class="filter-field">
+            <select id="segmentCameraFilter" onchange="renderSegments()"></select>
+          </div>
+          <div class="filter-field small">
+            <select id="segmentStatusFilter" onchange="renderSegments()">
+              <option value="">All statuses</option>
+              <option value="queued">Queued</option>
+              <option value="processing">Processing</option>
+              <option value="normal">Normal</option>
+              <option value="suspicious">Suspicious</option>
+              <option value="accident">Accident</option>
+              <option value="duplicate">Duplicate</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <input id="segmentSearch" placeholder="Search segment or camera" oninput="renderSegments()" />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Received</th>
+                <th>Camera</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>File</th>
+                <th>Event</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="segmentRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-storage" class="panel tab-view">
+        <div class="panel-head">
+          <div class="panel-title">Storage Management</div>
+          <div class="inline-actions">
+            <input id="cleanupHours" type="number" min="1" value="24" style="width: 92px;" />
+            <button onclick="refreshStorage()">Refresh Storage</button>
+            <button onclick="previewCleanup()">Preview &gt;24h</button>
+            <button class="danger" onclick="runCleanup()">Delete &gt;24h</button>
+            <button class="danger" onclick="deleteAllEvents()">Delete All Events</button>
+          </div>
+        </div>
+        <div id="storageMetrics" class="storage-grid"></div>
+        <div class="notice" id="cleanupResult">No cleanup operation yet.</div>
+        <div class="panel-head">
+          <div class="panel-title">Evidence Archive</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Camera</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Size</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="evidenceRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-upload" class="panel tab-view">
+        <div class="panel-head">
+          <div class="panel-title">Upload Segment</div>
+        </div>
+        <form id="uploadForm" class="panel-body" onsubmit="uploadSegment(event)">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="uploadCameraId">Camera ID</label>
+              <input id="uploadCameraId" name="camera_id" placeholder="CAM_001" required />
+            </div>
+            <div class="form-field">
+              <label for="uploadSegmentStart">Segment Start</label>
+              <input id="uploadSegmentStart" name="segment_start" placeholder="2026-06-18T10:00:00" />
+            </div>
+            <div class="form-field full-width">
+              <label for="uploadApiKey">Upload API Key</label>
+              <input id="uploadApiKey" name="api_key" placeholder="Leave empty if disabled" />
+            </div>
+            <div class="form-field full-width">
+              <label for="uploadFile">Video File</label>
+              <input id="uploadFile" name="file" type="file" accept="video/*" required />
+            </div>
+            <div class="form-field full-width">
+              <button class="primary" type="submit">Upload And Queue</button>
+            </div>
+          </div>
+          <div id="uploadResult" class="notice" style="margin-top: 12px;">Upload status will appear here.</div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="eventDialog" class="event-dialog">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title" id="dialogTitle">Event</div>
+        <div class="muted" id="dialogSubtitle"></div>
+      </div>
+      <button onclick="closeDialog()">Close</button>
+    </div>
+    <div class="dialog-grid">
+      <div class="details">
+        <video id="clipPlayer" controls></video>
+        <div class="score-panel">
+          <div class="score-box">
+            <span>Current score</span>
+            <strong id="currentScoreValue">-</strong>
+            <small id="currentScoreStatus">Waiting for playback</small>
+          </div>
+          <div class="score-box">
+            <span>Clip time</span>
+            <strong id="currentClipTime">0.00s</strong>
+            <small id="currentScoreTimestamp">-</small>
+          </div>
+          <div class="score-box">
+            <span>Threshold</span>
+            <strong>0.50</strong>
+            <small>Accident decision boundary</small>
+          </div>
+        </div>
+      </div>
+      <div class="details">
+        <div id="eventDetails"></div>
+        <div class="inline-actions">
+          <button class="primary" onclick="confirmCurrent()">Confirm accident</button>
+          <button class="danger" onclick="falseAlarmCurrent()">False alarm</button>
+        </div>
+        <div id="scoreList" class="notice"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const state = {
+      tab: "events",
+      cameras: [],
+      events: [],
+      segments: [],
+      evidence: [],
+      storageSummary: null,
+      currentEventId: "",
+      currentEvent: null,
+      currentScores: []
+    };
+
+    async function getJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
+    }
+
+    function setTab(tab) {
+      state.tab = tab;
+      for (const name of ["events", "segments", "storage", "upload"]) {
+        document.getElementById(`tab-${name}`).classList.toggle("active", name === tab);
+        document.getElementById(`view-${name}`).classList.toggle("active", name === tab);
+      }
+    }
+
+    async function refreshAll() {
+      await Promise.all([
+        refreshCameras(),
+        refreshEvents(),
+        refreshSegments(),
+        refreshStorage()
+      ]);
+      document.getElementById("lastRefresh").textContent = `Last refresh: ${new Date().toLocaleTimeString()}`;
+      updateKpis();
+      updateFilterOptions();
+    }
+
+    async function refreshCameras() {
+      state.cameras = await getJson("/api/cameras");
+      renderCameras();
+    }
+
+    async function refreshEvents() {
+      state.events = await getJson("/api/events?limit=200");
+      renderEvents();
+    }
+
+    async function refreshSegments() {
+      state.segments = await getJson("/api/storage/segments?limit=200");
+      renderSegments();
+      updateKpis();
+    }
+
+    async function refreshStorage() {
+      const [summary, evidence] = await Promise.all([
+        getJson("/api/storage/summary"),
+        getJson("/api/storage/evidence?limit=200")
+      ]);
+      state.storageSummary = summary;
+      state.evidence = evidence;
+      renderStorageSummary();
+      renderEvidence();
+      updateKpis();
+    }
+
+    function renderCameras() {
+      const list = document.getElementById("cameraList");
+      document.getElementById("cameraCount").textContent = String(state.cameras.length);
+      if (!state.cameras.length) {
+        list.innerHTML = `<div class="empty">No cameras loaded</div>`;
+        return;
+      }
+      list.innerHTML = "";
+      for (const camera of state.cameras) {
+        const item = document.createElement("div");
+        item.className = "camera-card";
+        const status = camera.status || "offline";
+        item.innerHTML = `
+          <div class="row-head">
+            <strong>${escapeHtml(camera.name || camera.camera_id)}</strong>
+            ${statusBadge(status)}
+          </div>
+          <div class="muted">${escapeHtml(camera.camera_id)}</div>
+          <div class="muted">${escapeHtml(camera.location || "")}</div>
+        `;
+        list.appendChild(item);
+      }
+    }
+
+    function renderEvents() {
+      const rows = document.getElementById("eventRows");
+      const camera = document.getElementById("eventCameraFilter")?.value || "";
+      const status = document.getElementById("eventStatusFilter")?.value || "";
+      const search = (document.getElementById("eventSearch")?.value || "").toLowerCase();
+      const filtered = state.events.filter(event => {
+        if (camera && event.camera_id !== camera) return false;
+        if (status && event.status !== status) return false;
+        if (search && !`${event.event_id} ${event.camera_id} ${event.status}`.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        rows.innerHTML = `<tr><td colspan="6" class="empty">No events match the current filters</td></tr>`;
+        return;
+      }
+      rows.innerHTML = "";
+      for (const event of filtered) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${formatDateTime(event.event_time)}</td>
+          <td>${escapeHtml(event.camera_id)}</td>
+          <td>${scoreBadge(event.max_score)}</td>
+          <td>${statusBadge(event.status)}</td>
+          <td>${event.clip_path ? `<span class="badge ok">ready</span>` : `<span class="badge warn">processing</span>`}</td>
+          <td>
+            ${event.clip_path ? `<button onclick="openEvent('${escapeHtml(event.event_id)}')">Open</button>` : ""}
+            <button class="danger" onclick="deleteEvidence('${escapeHtml(event.event_id)}')">Delete</button>
+          </td>
+        `;
+        rows.appendChild(row);
+      }
+    }
+
+    function renderSegments() {
+      const rows = document.getElementById("segmentRows");
+      const camera = document.getElementById("segmentCameraFilter")?.value || "";
+      const status = document.getElementById("segmentStatusFilter")?.value || "";
+      const search = (document.getElementById("segmentSearch")?.value || "").toLowerCase();
+      const filtered = state.segments.filter(segment => {
+        if (camera && segment.camera_id !== camera) return false;
+        if (status && segment.status !== status) return false;
+        if (search && !`${segment.segment_id} ${segment.camera_id} ${segment.status}`.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        rows.innerHTML = `<tr><td colspan="7" class="empty">No segments match the current filters</td></tr>`;
+        return;
+      }
+      rows.innerHTML = "";
+      for (const item of filtered) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${formatDateTime(item.received_at)}</td>
+          <td>${escapeHtml(item.camera_id)}</td>
+          <td>${statusBadge(item.status)}</td>
+          <td>${item.max_score == null ? `<span class="muted">-</span>` : scoreBadge(item.max_score)}</td>
+          <td>${item.file_exists ? formatBytes(item.file_size_bytes || 0) : `<span class="muted">deleted</span>`}</td>
+          <td>${item.event_id ? `<button onclick="openEvent('${escapeHtml(item.event_id)}')">Open</button>` : `<span class="muted">-</span>`}</td>
+          <td>${item.file_exists ? `<button class="danger" onclick="deleteSegment('${escapeHtml(item.segment_id)}')">Delete</button>` : ""}</td>
+        `;
+        rows.appendChild(row);
+      }
+    }
+
+    function renderStorageSummary() {
+      const metrics = document.getElementById("storageMetrics");
+      const summary = state.storageSummary || {};
+      const roots = summary.roots || {};
+      const segments = roots.segments || {};
+      const evidence = roots.evidence || {};
+      const thumbnails = roots.thumbnails || {};
+      metrics.innerHTML = `
+        <div class="storage-card"><span class="muted">Segments</span><strong>${formatBytes(segments.size_bytes || 0)}</strong><div class="muted">${segments.file_count || 0} files</div></div>
+        <div class="storage-card"><span class="muted">Evidence</span><strong>${formatBytes(evidence.size_bytes || 0)}</strong><div class="muted">${summary.event_count || 0} events</div></div>
+        <div class="storage-card"><span class="muted">Thumbnails</span><strong>${formatBytes(thumbnails.size_bytes || 0)}</strong><div class="muted">${thumbnails.file_count || 0} files</div></div>
+      `;
+    }
+
+    function renderEvidence() {
+      const rows = document.getElementById("evidenceRows");
+      if (!state.evidence.length) {
+        rows.innerHTML = `<tr><td colspan="6" class="empty">No evidence packages</td></tr>`;
+        return;
+      }
+      rows.innerHTML = "";
+      for (const item of state.evidence) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${formatDateTime(item.event_time)}</td>
+          <td>${escapeHtml(item.camera_id)}</td>
+          <td>${scoreBadge(item.max_score || 0)}</td>
+          <td>${statusBadge(item.status)}</td>
+          <td>${formatBytes(item.package_size_bytes || 0)}</td>
+          <td>
+            ${item.clip_exists ? `<button onclick="openEvent('${escapeHtml(item.event_id)}')">Open</button>` : `<span class="muted">No clip</span>`}
+            <button class="danger" onclick="deleteEvidence('${escapeHtml(item.event_id)}')">Delete</button>
+          </td>
+        `;
+        rows.appendChild(row);
+      }
+    }
+
+    async function openEvent(eventId) {
+      state.currentEventId = eventId;
+      const [event, scores] = await Promise.all([
+        getJson(`/api/events/${eventId}`),
+        getJson(`/api/events/${eventId}/scores`)
+      ]);
+      const displayScores = scoresForClip(scores, event);
+      state.currentEvent = event;
+      state.currentScores = displayScores;
+
+      document.getElementById("dialogTitle").textContent = event.event_id;
+      document.getElementById("dialogSubtitle").textContent = `${event.camera_id} · ${formatDateTime(event.event_time)}`;
+      const player = document.getElementById("clipPlayer");
+      if (event.clip_path) {
+        player.src = `/api/events/${eventId}/clip?t=${Date.now()}`;
+        player.load();
+      } else {
+        player.removeAttribute("src");
+        player.load();
+      }
+      document.getElementById("eventDetails").innerHTML = `
+        ${detailRow("Camera", event.camera_id)}
+        ${detailRow("Status", event.status)}
+        ${detailRow("Max score", Number(event.max_score || 0).toFixed(3))}
+        ${detailRow("Decision", event.decision_reason || "")}
+        ${detailRow("Clip", event.clip_path ? "ready" : "processing")}
+        ${detailRow("Clip window", clipWindowLabel(event))}
+        ${detailRow("Clip score samples", `${displayScores.length} / ${scores.length}`)}
+      `;
+      document.getElementById("scoreList").textContent = displayScores
+        .map(item => `${relativeScoreTime(item, event)}: ${Number(item.score).toFixed(3)}`)
+        .join(" | ");
+      updateCurrentScore();
+      document.getElementById("eventDialog").showModal();
+    }
+
+    function updateCurrentScore() {
+      const player = document.getElementById("clipPlayer");
+      const scoreValue = document.getElementById("currentScoreValue");
+      const scoreStatus = document.getElementById("currentScoreStatus");
+      const clipTime = document.getElementById("currentClipTime");
+      const scoreTimestamp = document.getElementById("currentScoreTimestamp");
+      const event = state.currentEvent;
+      const scores = state.currentScores || [];
+
+      const currentSeconds = Number(player.currentTime || 0);
+      clipTime.textContent = `${currentSeconds.toFixed(2)}s`;
+
+      if (!event || !scores.length) {
+        scoreValue.textContent = "-";
+        scoreStatus.textContent = "No score samples";
+        scoreTimestamp.textContent = "-";
+        return;
+      }
+
+      const nearest = nearestScoreAtClipTime(scores, event, currentSeconds);
+      if (!nearest) {
+        scoreValue.textContent = "-";
+        scoreStatus.textContent = "No matching score";
+        scoreTimestamp.textContent = "-";
+        return;
+      }
+
+      const score = Number(nearest.item.score || 0);
+      scoreValue.textContent = score.toFixed(4);
+      scoreStatus.textContent = score >= 0.5 ? "above accident threshold" : "below accident threshold";
+      scoreTimestamp.textContent =
+        `nearest sample: ${nearest.relativeSeconds.toFixed(2)}s, delta ${nearest.deltaSeconds.toFixed(2)}s`;
+    }
+
+    function nearestScoreAtClipTime(scores, event, currentSeconds) {
+      const clipStartMs = parseDateMs(event.clip_start_time) ?? parseDateMs(scores[0]?.timestamp);
+      if (clipStartMs == null) return null;
+
+      let best = null;
+      for (const item of scores) {
+        const scoreMs = parseDateMs(item.timestamp);
+        if (scoreMs == null) continue;
+        const relativeSeconds = Math.max(0, (scoreMs - clipStartMs) / 1000);
+        const deltaSeconds = Math.abs(relativeSeconds - currentSeconds);
+        if (!best || deltaSeconds < best.deltaSeconds) {
+          best = { item, relativeSeconds, deltaSeconds };
+        }
+      }
+      return best;
+    }
+
+    function scoresForClip(scores, event) {
+      const start = parseDateMs(event.clip_start_time);
+      const end = parseDateMs(event.clip_end_time);
+      if (start == null || end == null || end <= start) return scores;
+
+      const filtered = scores.filter(item => {
+        const ts = parseDateMs(item.timestamp);
+        return ts != null && ts >= start && ts <= end;
+      });
+      return filtered.length ? filtered : scores;
+    }
+
+    function parseDateMs(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      const ms = date.getTime();
+      return Number.isNaN(ms) ? null : ms;
+    }
+
+    function clipWindowLabel(event) {
+      if (event.clip_start_seconds == null || event.clip_end_seconds == null) {
+        return "full score timeline";
+      }
+      return `${Number(event.clip_start_seconds).toFixed(2)}s - ${Number(event.clip_end_seconds).toFixed(2)}s`;
+    }
+
+    function relativeScoreTime(item, event) {
+      const clipStart = parseDateMs(event.clip_start_time);
+      const scoreTime = parseDateMs(item.timestamp);
+      if (clipStart == null || scoreTime == null) return formatDateTime(item.timestamp);
+      const seconds = Math.max(0, (scoreTime - clipStart) / 1000);
+      return `${seconds.toFixed(2)}s`;
+    }
+
+    async function confirmCurrent() {
+      if (!state.currentEventId) return;
+      await fetch(`/api/events/${state.currentEventId}/confirm`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      closeDialog();
+      await refreshAll();
+    }
+
+    async function falseAlarmCurrent() {
+      if (!state.currentEventId) return;
+      await fetch(`/api/events/${state.currentEventId}/false-alarm`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      closeDialog();
+      await refreshAll();
+    }
+
+    async function uploadSegment(event) {
+      event.preventDefault();
+      const result = document.getElementById("uploadResult");
+      const file = document.getElementById("uploadFile").files[0];
+      const cameraId = document.getElementById("uploadCameraId").value.trim();
+      const segmentStart = document.getElementById("uploadSegmentStart").value.trim();
+      if (!file || !cameraId) return;
+      const form = new FormData();
+      form.append("camera_id", cameraId);
+      form.append("file", file);
+      if (segmentStart) form.append("segment_start", segmentStart);
+      const apiKey = document.getElementById("uploadApiKey").value.trim();
+      const headers = apiKey ? { "X-API-Key": apiKey } : {};
+      result.textContent = "Uploading...";
+      const response = await fetch("/api/segments", { method: "POST", headers, body: form });
+      if (!response.ok) {
+        result.textContent = await response.text();
+        return;
+      }
+      const payload = await response.json();
+      result.textContent = `Queued segment ${payload.segment_id}`;
+      document.getElementById("uploadForm").reset();
+      await refreshAll();
+      setTab("segments");
+    }
+
+    async function deleteEvidence(eventId) {
+      if (!confirm("Delete this evidence package?")) return;
+      await fetch(`/api/storage/evidence/${eventId}`, { method: "DELETE" });
+      await refreshAll();
+    }
+
+    async function deleteSegment(segmentId) {
+      if (!confirm("Delete this stored segment file?")) return;
+      await fetch(`/api/storage/segments/${segmentId}`, { method: "DELETE" });
+      await refreshAll();
+    }
+
+    async function deleteAllEvents() {
+      const answer = prompt("Type DELETE to remove all events, scores, and evidence clips. Cameras and segment rows are kept.");
+      if (answer !== "DELETE") return;
+      const response = await fetch("/api/storage/events?confirm=DELETE_ALL_EVENTS", { method: "DELETE" });
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      document.getElementById("cleanupResult").textContent =
+        `Deleted all events: ${result.event_count} event(s), ${result.deleted_packages} evidence package(s), ${formatBytes(result.deleted_bytes || 0)}.`;
+      await refreshAll();
+    }
+
+    async function previewCleanup() {
+      const hours = cleanupHoursValue();
+      const response = await fetch(`/api/storage/cleanup/segments?older_than_hours=${hours}&dry_run=true`, { method: "POST" });
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      document.getElementById("cleanupResult").textContent =
+        `Preview: ${result.candidate_count} segment(s) older than ${hours}h, ${formatBytes(result.candidate_bytes || 0)} would be deleted.`;
+    }
+
+    async function runCleanup() {
+      const hours = cleanupHoursValue();
+      if (!confirm(`Delete stored non-accident segments older than ${hours} hours?`)) return;
+      const response = await fetch(`/api/storage/cleanup/segments?older_than_hours=${hours}&dry_run=false`, { method: "POST" });
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      document.getElementById("cleanupResult").textContent =
+        `Deleted: ${result.deleted_count} segment(s), ${formatBytes(result.deleted_bytes || 0)}.`;
+      await refreshAll();
+    }
+
+    function cleanupHoursValue() {
+      return Math.max(1, Number(document.getElementById("cleanupHours").value || 24));
+    }
+
+    function updateKpis() {
+      const online = state.cameras.filter(camera => camera.status === "online").length;
+      const pending = state.events.filter(event => event.status === "pending").length;
+      const latest = state.events[0];
+      const queued = state.segments.filter(segment => ["queued", "processing"].includes(segment.status)).length;
+      const evidenceRoot = state.storageSummary?.roots?.evidence || {};
+      document.getElementById("kpiOnline").textContent = String(online);
+      document.getElementById("kpiCameraSub").textContent = `${state.cameras.length} total`;
+      document.getElementById("kpiPending").textContent = String(pending);
+      document.getElementById("kpiLatestScore").textContent = latest ? Number(latest.max_score || 0).toFixed(3) : "0.000";
+      document.getElementById("kpiLatestCamera").textContent = latest ? latest.camera_id : "No event";
+      document.getElementById("kpiQueue").textContent = String(queued);
+      document.getElementById("kpiEvidence").textContent = formatBytes(evidenceRoot.size_bytes || 0);
+      document.getElementById("kpiEvidenceSub").textContent = `${evidenceRoot.file_count || 0} files`;
+      const summary = state.storageSummary?.segment_status_counts || {};
+      document.getElementById("queueSummary").textContent =
+        `Queued: ${summary.queued || 0} · Processing: ${summary.processing || 0} · Failed: ${summary.failed || 0}`;
+    }
+
+    function updateFilterOptions() {
+      const cameraIds = Array.from(new Set([
+        ...state.cameras.map(camera => camera.camera_id),
+        ...state.events.map(event => event.camera_id),
+        ...state.segments.map(segment => segment.camera_id)
+      ])).filter(Boolean).sort();
+      fillSelect("eventCameraFilter", "All cameras", cameraIds);
+      fillSelect("segmentCameraFilter", "All cameras", cameraIds);
+    }
+
+    function fillSelect(id, label, values) {
+      const select = document.getElementById(id);
+      const current = select.value;
+      select.innerHTML = `<option value="">${label}</option>` + values
+        .map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+        .join("");
+      select.value = values.includes(current) ? current : "";
+    }
+
+    function clearEventFilters() {
+      document.getElementById("eventCameraFilter").value = "";
+      document.getElementById("eventStatusFilter").value = "";
+      document.getElementById("eventSearch").value = "";
+      renderEvents();
+    }
+
+    function closeDialog() {
+      const player = document.getElementById("clipPlayer");
+      player.pause();
+      player.removeAttribute("src");
+      player.load();
+      state.currentEvent = null;
+      state.currentScores = [];
+      document.getElementById("eventDialog").close();
+    }
+
+    function connectAlerts() {
+      const badge = document.getElementById("wsState");
+      const protocol = location.protocol === "https:" ? "wss" : "ws";
+      const socket = new WebSocket(`${protocol}://${location.host}/ws/alerts`);
+      socket.onopen = () => {
+        badge.textContent = "live";
+        badge.className = "badge ok";
+      };
+      socket.onmessage = async () => {
+        await refreshEvents();
+        await refreshStorage();
+        updateKpis();
+      };
+      socket.onclose = () => {
+        badge.textContent = "reconnecting";
+        badge.className = "badge warn";
+        setTimeout(connectAlerts, 2000);
+      };
+    }
+
+    function statusBadge(status) {
+      const value = String(status || "unknown");
+      let cls = "badge";
+      if (["online", "confirmed", "accident", "ready", "normal"].includes(value)) cls += " ok";
+      else if (["pending", "queued", "processing", "suspicious", "reconnecting"].includes(value)) cls += " warn";
+      else if (["failed", "false_alarm", "offline"].includes(value)) cls += " danger";
+      else cls += " accent";
+      return `<span class="${cls}">${escapeHtml(value)}</span>`;
+    }
+
+    function scoreBadge(score) {
+      const value = Number(score || 0);
+      const cls = value >= 0.5 ? "badge danger" : value >= 0.4 ? "badge warn" : "badge";
+      return `<span class="${cls}">${value.toFixed(3)}</span>`;
+    }
+
+    function detailRow(label, value) {
+      return `<div class="detail-row"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`;
+    }
+
+    function formatBytes(value) {
+      const bytes = Number(value || 0);
+      if (bytes < 1024) return `${bytes} B`;
+      const units = ["KB", "MB", "GB", "TB"];
+      let size = bytes / 1024;
+      let unitIndex = 0;
+      while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+      }
+      return `${size.toFixed(size >= 10 ? 1 : 2)} ${units[unitIndex]}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    const clipPlayerElement = document.getElementById("clipPlayer");
+    clipPlayerElement.addEventListener("timeupdate", updateCurrentScore);
+    clipPlayerElement.addEventListener("seeked", updateCurrentScore);
+    clipPlayerElement.addEventListener("loadedmetadata", updateCurrentScore);
+    clipPlayerElement.addEventListener("pause", updateCurrentScore);
+
+    refreshAll();
+    connectAlerts();
+    setInterval(refreshCameras, 5000);
+    setInterval(refreshSegments, 6000);
+  </script>
+</body>
+</html>

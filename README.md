@@ -7,6 +7,12 @@ Datasets, extracted features, checkpoints, ONNX files, databases, generated
 clips, and experiment outputs are not included. Put local data in `data/`,
 model files in `models/`, and generated results in `output/`.
 
+The report of this project could be found at:
+
+```text
+https://drive.google.com/file/d/1w08GXoqVcFyGAfyAbAN30CujoG10qzSn/view?usp=sharing
+```
+
 The training dataset and the three testing datasets used in the thesis can be
 downloaded from:
 
